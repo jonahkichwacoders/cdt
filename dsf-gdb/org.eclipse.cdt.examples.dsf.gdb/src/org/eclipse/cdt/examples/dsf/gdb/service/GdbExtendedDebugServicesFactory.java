@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     Marc Khouzam (Ericsson) - initial API and implementation
  *******************************************************************************/
@@ -15,18 +15,20 @@ import org.eclipse.cdt.dsf.gdb.service.GdbDebugServicesFactory;
 import org.eclipse.cdt.dsf.gdb.service.command.GDBControl;
 import org.eclipse.cdt.dsf.gdb.service.command.GDBControl_7_0;
 import org.eclipse.cdt.dsf.gdb.service.command.GDBControl_7_2;
-import org.eclipse.cdt.dsf.gdb.service.command.GDBControl_7_4;
 import org.eclipse.cdt.dsf.mi.service.command.CommandFactory;
 import org.eclipse.cdt.dsf.service.DsfSession;
 import org.eclipse.cdt.examples.dsf.gdb.service.command.GdbExtendedCommandFactory_6_8;
 import org.eclipse.debug.core.ILaunchConfiguration;
 
 public class GdbExtendedDebugServicesFactory extends GdbDebugServicesFactory {
-	
+
+	private String fVersion;
+
 	public GdbExtendedDebugServicesFactory(String version) {
 		super(version);
+		this.fVersion = version;
 	}
-	
+
 	@Override
     @SuppressWarnings("unchecked")
     public <V> V createService(Class<V> clazz, DsfSession session, Object ... optionalArguments) {
@@ -38,24 +40,21 @@ public class GdbExtendedDebugServicesFactory extends GdbDebugServicesFactory {
 
 	@Override
 	protected ICommandControl createCommandControl(DsfSession session, ILaunchConfiguration config) {
-		if (compareVersionWith(GDB_7_7_VERSION) >= 0) {
+		if (GDB_7_4_VERSION.compareTo(fVersion) <= 0) {
 			return new GDBExtendedControl(session, config, new GdbExtendedCommandFactory_6_8());
 		}
-		if (compareVersionWith(GDB_7_4_VERSION) >= 0) {
-			return new GDBControl_7_4(session, config, new GdbExtendedCommandFactory_6_8());
-		}
-		if (compareVersionWith(GDB_7_2_VERSION) >= 0) {
+		if (GDB_7_2_VERSION.compareTo(fVersion) <= 0) {
 			return new GDBControl_7_2(session, config, new GdbExtendedCommandFactory_6_8());
 		}
-		if (compareVersionWith(GDB_7_0_VERSION) >= 0) {
+		if (GDB_7_0_VERSION.compareTo(fVersion) <= 0) {
 			return new GDBControl_7_0(session, config, new GdbExtendedCommandFactory_6_8());
 		}
-		if (compareVersionWith(GDB_6_8_VERSION) >= 0) {
+		if (GDB_6_8_VERSION.compareTo(fVersion) <= 0) {
 			return new GDBControl(session, config, new GdbExtendedCommandFactory_6_8());
 		}
 		return new GDBControl(session, config, new CommandFactory());
 	}
-	
+
 	protected IGDBExtendedFunctions createExtendedService(DsfSession session) {
 		return new GDBExtendedService(session);
 	}

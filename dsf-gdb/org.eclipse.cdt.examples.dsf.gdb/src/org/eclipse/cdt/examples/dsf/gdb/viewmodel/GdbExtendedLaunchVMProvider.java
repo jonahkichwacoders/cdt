@@ -23,16 +23,15 @@ import org.eclipse.cdt.dsf.ui.viewmodel.IVMNode;
 import org.eclipse.debug.internal.ui.viewers.model.provisional.IPresentationContext;
 
 @SuppressWarnings("restriction")
-public class GdbExtendedLaunchVMProvider extends LaunchVMProvider 
+public class GdbExtendedLaunchVMProvider extends LaunchVMProvider
 {
 	@ThreadSafe
     public GdbExtendedLaunchVMProvider(AbstractVMAdapter adapter, IPresentationContext presentationContext, DsfSession session)
     {
         super(adapter, presentationContext, session);
-    }
-	
-	@Override
-	protected void createNodes() {
+
+        // See Bug 455537 which allowed the below to be handled by overriding createNodes()
+
         IRootVMNode launchNode = new LaunchRootVMNode(this);
         setRootNode(launchNode);
 
@@ -40,10 +39,10 @@ public class GdbExtendedLaunchVMProvider extends LaunchVMProvider
         IVMNode containerNode = new ContainerVMNode(this, getSession());
         IVMNode processesNode = new GdbStandardProcessVMNode(this);
         addChildNodes(launchNode, new IVMNode[] { containerNode, processesNode});
-        
+
         IVMNode threadsNode = new GdbExtendedThreadVMNode(this, getSession());
         addChildNodes(containerNode, new IVMNode[] { threadsNode });
-        
+
         IVMNode stackFramesNode = new StackFramesVMNode(this, getSession());
         addChildNodes(threadsNode, new IVMNode[] { stackFramesNode });
     }

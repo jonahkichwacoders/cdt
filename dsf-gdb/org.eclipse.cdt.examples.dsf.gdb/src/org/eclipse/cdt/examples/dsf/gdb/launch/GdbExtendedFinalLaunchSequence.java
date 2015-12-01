@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     Marc Khouzam (Ericsson) - initial API and implementation
  *******************************************************************************/
@@ -19,7 +19,7 @@ import org.eclipse.cdt.dsf.concurrent.IDsfStatusConstants;
 import org.eclipse.cdt.dsf.concurrent.ImmediateDataRequestMonitor;
 import org.eclipse.cdt.dsf.concurrent.RequestMonitor;
 import org.eclipse.cdt.dsf.concurrent.RequestMonitorWithProgress;
-import org.eclipse.cdt.dsf.gdb.launching.FinalLaunchSequence_7_7;
+import org.eclipse.cdt.dsf.gdb.launching.FinalLaunchSequence_7_2;
 import org.eclipse.cdt.dsf.gdb.service.command.IGDBControl;
 import org.eclipse.cdt.dsf.mi.service.command.output.MIInfo;
 import org.eclipse.cdt.dsf.service.DsfServicesTracker;
@@ -29,7 +29,7 @@ import org.eclipse.cdt.examples.dsf.gdb.service.IGDBExtendedFunctions;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 
-public class GdbExtendedFinalLaunchSequence extends FinalLaunchSequence_7_7 {
+public class GdbExtendedFinalLaunchSequence extends FinalLaunchSequence_7_2 {
 
 	private IGDBControl fControl;
 	private DsfServicesTracker fTracker;
@@ -54,23 +54,23 @@ public class GdbExtendedFinalLaunchSequence extends FinalLaunchSequence_7_7 {
 			// Add the step to set pagination before the .gdbinit file is sourced
 			// that way the user can override this setting using .gdbinit.
 			orderList.add(orderList.indexOf("stepSourceGDBInitFile"), "stepSetPagination"); //$NON-NLS-1$ //$NON-NLS-2$
-			
+
 			return orderList.toArray(new String[orderList.size()]);
 		}
 
 		return null;
 	}
-	
+
 	@Execute
 	public void stepInitializeExtendedFinalLaunchSequence(RequestMonitor rm) {
 		fTracker = new DsfServicesTracker(GDBExamplePlugin.getBundleContext(), getSession().getId());
 		fControl = fTracker.getService(IGDBControl.class);
-		
+
         if (fControl == null) {
 			rm.done(new Status(IStatus.ERROR, GDBExamplePlugin.PLUGIN_ID, IDsfStatusConstants.INTERNAL_ERROR, "Cannot obtain service", null)); //$NON-NLS-1$
 			return;
 		}
-		
+
 		rm.done();
 	}
 
@@ -85,7 +85,7 @@ public class GdbExtendedFinalLaunchSequence extends FinalLaunchSequence_7_7 {
 	public void stepNotifyVersion(final RequestMonitor rm) {
 		final IGDBExtendedFunctions funcService = fTracker.getService(IGDBExtendedFunctions.class);
 		funcService.getVersion(
-				fControl.getContext(), 
+				fControl.getContext(),
 				new ImmediateDataRequestMonitor<String>(rm) {
 					@Override
 					protected void handleCompleted() {
