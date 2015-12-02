@@ -74,6 +74,8 @@ import org.eclipse.cdt.dsf.gdb.launching.GdbLaunch;
 import org.eclipse.cdt.dsf.gdb.launching.GdbLaunchDelegate;
 import org.eclipse.cdt.dsf.service.DsfSession;
 import org.eclipse.cdt.examples.dsf.gdb.actions.DsfExtendedTerminateCommand;
+import org.eclipse.cdt.examples.dsf.gdb.actions.DsfShowVersionHandler;
+import org.eclipse.cdt.examples.dsf.gdb.commands.IShowVersionHandler;
 import org.eclipse.cdt.examples.dsf.gdb.viewmodel.GdbExtendedViewModelAdapter;
 import org.eclipse.cdt.ui.text.c.hover.ICEditorTextHover;
 import org.eclipse.core.runtime.IAdapterFactory;
@@ -144,6 +146,7 @@ public class GdbExtendedAdapterFactory
         final GdbSelectPrevTraceRecordCommand fSelectPrevRecordTarget;
         final GdbDebugTextHover fDebugTextHover;
         final GdbPinProvider fPinProvider;
+        final DsfShowVersionHandler fDsfShowVersionHandler;
 
         SessionAdapterSet(GdbLaunch launch) {
             fLaunch = launch;
@@ -190,6 +193,7 @@ public class GdbExtendedAdapterFactory
             fSelectNextRecordTarget = new GdbSelectNextTraceRecordCommand(session);
             fSelectPrevRecordTarget = new GdbSelectPrevTraceRecordCommand(session);
             fPinProvider = new GdbPinProvider(session);
+            fDsfShowVersionHandler = new DsfShowVersionHandler(session);
 
             session.registerModelAdapter(ISteppingModeTarget.class, fSteppingModeTarget);
             session.registerModelAdapter(IStepIntoHandler.class, fStepIntoCommand);
@@ -218,6 +222,7 @@ public class GdbExtendedAdapterFactory
             session.registerModelAdapter(ISelectPrevTraceRecordHandler.class, fSelectPrevRecordTarget);
             session.registerModelAdapter(IPinProvider.class, fPinProvider);
             session.registerModelAdapter(IDsfStepIntoSelection.class, fStepIntoSelectionCommand);
+            session.registerModelAdapter(IShowVersionHandler.class, fDsfShowVersionHandler);
 
             fDebugModelProvider = new IDebugModelProvider() {
                 // @see org.eclipse.debug.core.model.IDebugModelProvider#getModelIdentifiers()
@@ -280,6 +285,7 @@ public class GdbExtendedAdapterFactory
             session.unregisterModelAdapter(ISelectNextTraceRecordHandler.class);
             session.unregisterModelAdapter(ISelectPrevTraceRecordHandler.class);
             session.unregisterModelAdapter(IPinProvider.class);
+            session.unregisterModelAdapter(IShowVersionHandler.class);
 
             session.unregisterModelAdapter(IDebugModelProvider.class);
             session.unregisterModelAdapter(ILaunch.class);
@@ -400,6 +406,7 @@ public class GdbExtendedAdapterFactory
         else if (adapterType.equals(IModelProxyFactory.class)) return adapterSet.fViewModelAdapter;
         else if (adapterType.equals(IColumnPresentationFactory.class)) return adapterSet.fViewModelAdapter;
         else if (adapterType.equals(ISuspendTrigger.class)) return adapterSet.fSuspendTrigger;
+        else if (adapterType.equals(IShowVersionHandler.class)) return adapterSet.fDsfShowVersionHandler;
         else return null;
     }
 
@@ -408,7 +415,7 @@ public class GdbExtendedAdapterFactory
     public Class[] getAdapterList() {
         return new Class[] {
             IElementContentProvider.class, IModelProxyFactory.class, ISuspendTrigger.class,
-            IColumnPresentationFactory.class,
+            IColumnPresentationFactory.class, IShowVersionHandler.class,
             };
     }
 
