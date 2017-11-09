@@ -107,7 +107,7 @@ public class GdbDebuggerPage extends AbstractCDebuggerPage implements Observer {
 		configuration.setAttribute(IGDBLaunchConfigurationConstants.ATTR_DEBUGGER_DEBUG_ON_FORK,
 				IGDBLaunchConfigurationConstants.DEBUGGER_DEBUG_ON_FORK_DEFAULT);
 		configuration.setAttribute(IGDBLaunchConfigurationConstants.ATTR_DEBUGGER_EXTERNAL_CONSOLE,
-				IGDBLaunchConfigurationConstants.DEBUGGER_EXTERNAL_CONSOLE_DEFAULT);
+				preferenceStore.getBoolean(IGdbDebugPreferenceConstants.PREF_EXTERNAL_CONSOLE));
 		configuration.setAttribute(IGDBLaunchConfigurationConstants.ATTR_DEBUGGER_TRACEPOINT_MODE,
 				IGDBLaunchConfigurationConstants.DEBUGGER_TRACEPOINT_MODE_DEFAULT);
 		
@@ -165,7 +165,7 @@ public class GdbDebuggerPage extends AbstractCDebuggerPage implements Observer {
 		boolean debugOnFork = getBooleanAttr(configuration, IGDBLaunchConfigurationConstants.ATTR_DEBUGGER_DEBUG_ON_FORK,
 				IGDBLaunchConfigurationConstants.DEBUGGER_DEBUG_ON_FORK_DEFAULT);
 		boolean externalConsole = getBooleanAttr(configuration, IGDBLaunchConfigurationConstants.ATTR_DEBUGGER_EXTERNAL_CONSOLE,
-				IGDBLaunchConfigurationConstants.DEBUGGER_EXTERNAL_CONSOLE_DEFAULT);
+				preferenceStore.getBoolean(IGdbDebugPreferenceConstants.PREF_EXTERNAL_CONSOLE));
 
 		if (fSolibBlock != null)
 			fSolibBlock.initializeFrom(configuration);

@@ -32,6 +32,7 @@ import org.eclipse.cdt.dsf.debug.service.IBreakpoints.IBreakpointsTargetDMContex
 import org.eclipse.cdt.dsf.debug.service.IRunControl.IContainerDMContext;
 import org.eclipse.cdt.dsf.debug.service.command.ICommand;
 import org.eclipse.cdt.dsf.gdb.IGDBLaunchConfigurationConstants;
+import org.eclipse.cdt.dsf.gdb.IGdbDebugPreferenceConstants;
 import org.eclipse.cdt.dsf.gdb.internal.GdbPlugin;
 import org.eclipse.cdt.dsf.gdb.launching.LaunchUtils;
 import org.eclipse.cdt.dsf.gdb.service.command.IGDBControl;
@@ -48,6 +49,7 @@ import org.eclipse.cdt.utils.pty.PTY;
 import org.eclipse.cdt.utils.pty.PersistentPTY;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 
 /**
@@ -288,9 +290,13 @@ public class StartOrRestartProcessSequence_7_0 extends ReflectionSequence {
     			return;
     		}
     
+			boolean externalConsoleDefault = Platform.getPreferencesService().getBoolean(GdbPlugin.PLUGIN_ID,
+					IGdbDebugPreferenceConstants.PREF_EXTERNAL_CONSOLE,
+					IGDBLaunchConfigurationConstants.DEBUGGER_EXTERNAL_CONSOLE_DEFAULT, null);
+
     		boolean externalConsole = CDebugUtils.getAttribute(fAttributes,
     				IGDBLaunchConfigurationConstants.ATTR_DEBUGGER_EXTERNAL_CONSOLE,
-    				IGDBLaunchConfigurationConstants.DEBUGGER_EXTERNAL_CONSOLE_DEFAULT);
+    				externalConsoleDefault);
     		if (externalConsole) {
 	    		initializeExternalConsole(new ImmediateRequestMonitor(rm) {
 					@Override
