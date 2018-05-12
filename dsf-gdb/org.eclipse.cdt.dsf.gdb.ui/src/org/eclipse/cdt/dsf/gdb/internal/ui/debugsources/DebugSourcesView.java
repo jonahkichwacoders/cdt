@@ -313,7 +313,8 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 					current = current.addNode(pRoot.toString());
 				parent = current;
 				// Add each sub-path
-				for (Path subpath : p) {
+				Path normalizedPath = p.normalize();
+				for (Path subpath : normalizedPath) {
 					if (subpath.equals(filename)) { // this is a leaf
 						current = current.addLeaf(srcFileInfo[i].getName(), p.toString());
 					} else {
