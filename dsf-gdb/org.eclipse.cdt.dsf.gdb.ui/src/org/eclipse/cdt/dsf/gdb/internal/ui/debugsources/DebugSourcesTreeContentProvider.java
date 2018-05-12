@@ -10,14 +10,33 @@
  *******************************************************************************/
 package org.eclipse.cdt.dsf.gdb.internal.ui.debugsources;
 
+import java.util.Set;
+
 import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.tree.DebugTree;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 
 public class DebugSourcesTreeContentProvider implements ITreeContentProvider {
+	public static final DebugSourcesTreeContentProvider FLATTENED = new DebugSourcesTreeContentProvider(true);
+	public static final DebugSourcesTreeContentProvider NORMAL = new DebugSourcesTreeContentProvider(false);
+
+	private boolean flattenFoldersWithNoFiles;
+
+	private DebugSourcesTreeContentProvider(boolean flattenFoldersWithNoFiles) {
+		this.flattenFoldersWithNoFiles = flattenFoldersWithNoFiles;
+	}
 
 	@Override
 	public Object[] getElements(Object inputElement) {
-		return getChildren(inputElement);
+		if (inputElement instanceof String) {
+			return new String[] { (String) inputElement };
+		}
+		if (inputElement instanceof DebugTree) {
+			@SuppressWarnings("unchecked")
+			DebugTree<Comparable<?>> tree = (DebugTree<Comparable<?>>) inputElement;
+			Set<DebugTree<Comparable<?>>> children = tree.getChildren();
+			return children.toArray();
+		}
+		return null;
 	}
 
 	@Override
@@ -26,8 +45,18 @@ public class DebugSourcesTreeContentProvider implements ITreeContentProvider {
 			return new String[] { (String) parentElement };
 		}
 		if (parentElement instanceof DebugTree) {
-			DebugTree<?> tree = (DebugTree<?>) parentElement;
-			return tree.getChildren().toArray();
+			@SuppressWarnings("unchecked")
+			DebugTree<Comparable<?>> tree = (DebugTree<Comparable<?>>) parentElement;
+			Set<DebugTree<Comparable<?>>> children = tree.getChildren();
+			if (flattenFoldersWithNoFiles) {
+				if (children.size() == 1) {
+					DebugTree<Comparable<?>> child = children.iterator().next();
+					if (child.getLeafData() == null) {
+						return getChildren(child);
+					}
+				}
+			}
+			return children.toArray();
 		}
 		return null;
 	}
@@ -40,10 +69,22 @@ public class DebugSourcesTreeContentProvider implements ITreeContentProvider {
 			return null;
 		}
 		if (element instanceof DebugTree) {
-			DebugTree<?> node = (DebugTree<?>) element;
-			return node.getParent();
+			@SuppressWarnings("unchecked")
+			DebugTree<Comparable<?>> node = (DebugTree<Comparable<?>>) element;
+			DebugTree<?> parent = node.getParent();
+			if (parent == null) {
+				return null;
+			}
+			if (flattenFoldersWithNoFiles) {
+				DebugTree<?> grandParent = parent.getParent();
+				if (grandParent != null && grandParent.getChildren().size() == 1) {
+					return getParent(parent);
+				}
+			}
+			return parent;
 		}
 		return null;
+
 	}
 
 	@Override
@@ -52,8 +93,7 @@ public class DebugSourcesTreeContentProvider implements ITreeContentProvider {
 			return false;
 		}
 		if (element instanceof DebugTree) {
-			DebugTree<?> node = (DebugTree<?>) element;
-			return node.hasChildren();
+			return getChildren(element).length > 0;
 		}
 		return false;
 	}

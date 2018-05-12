@@ -30,6 +30,10 @@ public class DebugSourcesMessages extends NLS {
 	public static String DebugSourcesExpandAction_description;
 	public static String DebugSourcesCollapseAction_name;
 	public static String DebugSourcesCollapseAction_description;
+	public static String DebugSourcesFlattendedTree_name;
+	public static String DebugSourcesFlattendedTree_description;
+	public static String DebugSourcesNormalTree_description;
+	public static String DebugSourcesNormalTree_name;
 	public static String DebugSourcesView_unrooted;
 
 	public static String GdbDebugSourcesPreferences_name;

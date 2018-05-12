@@ -66,6 +66,8 @@ import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesCollapseAction;
 import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesExpandAction;
+import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesFlattendedTree;
+import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesNormalTree;
 import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.tree.DebugTree;
 
 public class DebugSourcesView extends ViewPart implements IDebugContextListener {
@@ -77,6 +79,8 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 	private TreeViewer viewer;
 
 	private DebugSourcesViewComparator<DebugTree> comparator;
+
+	private TreeViewerColumn[] viewerColumns;
 
 	public DebugSourcesView() {
 	}
@@ -96,13 +100,13 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 		viewer = tree.getViewer();
 		viewer.getTree().setLinesVisible(true);
 		viewer.getTree().setHeaderVisible(true);
-		viewer.setContentProvider(new DebugSourcesTreeContentProvider());
+		viewer.setContentProvider(DebugSourcesTreeContentProvider.FLATTENED);
 		viewer.setUseHashlookup(true);
 
 		comparator = new DebugSourcesViewComparator<DebugTree>();
 
 		// create columns
-		createColumns(viewer);
+		viewerColumns = createColumns(viewer);
 
 		viewer.setComparator(comparator);
 		viewer.setInput(DebugSourcesMessages.DebugSourcesMessages_initializing);
@@ -125,7 +129,7 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 			}
 		});
 
-		createActions(viewer);
+		createActions(viewer, viewerColumns);
 
 		registerForEvents();
 		DebugUITools.getDebugContextManager().getContextService(getSite().getWorkbenchWindow())
@@ -133,7 +137,7 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 
 	}
 
-	private void createColumns(TreeViewer viewer) {
+	private TreeViewerColumn[] createColumns(TreeViewer viewer) {
 		String[] titles = { DebugSourcesMessages.DebugSourcesMessages_name_column,
 				DebugSourcesMessages.DebugSourcesMessages_path_column };
 		String[] tooltips = { DebugSourcesMessages.DebugSourcesMessages_sort_name_column_tooltip,
@@ -141,14 +145,17 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 		int[] bounds = { 300, 800 };
 		ColumnViewerToolTipSupport.enableFor(viewer);
 
+		TreeViewerColumn[] columns = new TreeViewerColumn[titles.length];
 		for (int i = 0; i < titles.length; i++) {
-			TreeViewerColumn tc = createTreeViewerColumn(titles[i], bounds[i], i);
+			TreeViewerColumn tc = createTreeViewerColumn(viewer, titles[i], bounds[i], i);
 			tc.getColumn().setToolTipText(tooltips[i]);
-			tc.setLabelProvider(new DebugSourcesLabelProvider(i));
+			tc.setLabelProvider(DebugSourcesLabelProvider.FLATTENED[i]);
+			columns[i] = tc;
 		}
+		return columns;
 	}
 
-	private TreeViewerColumn createTreeViewerColumn(String title, int bound, final int colNumber) {
+	private TreeViewerColumn createTreeViewerColumn(TreeViewer viewer, String title, int bound, final int colNumber) {
 		final TreeViewerColumn viewerColumn = new TreeViewerColumn(viewer, SWT.NONE);
 		final TreeColumn column = viewerColumn.getColumn();
 		column.setText(title);
@@ -183,11 +190,13 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 		return selectionAdapter;
 	}
 
-	private void createActions(TreeViewer viewer) {
+	private void createActions(TreeViewer viewer, TreeViewerColumn[] viewerColumns) {
 		IActionBars actionBars = getViewSite().getActionBars();
 		IToolBarManager toolBar = actionBars.getToolBarManager();
 		toolBar.add(new DebugSourcesExpandAction(viewer));
 		toolBar.add(new DebugSourcesCollapseAction(viewer));
+		toolBar.add(new DebugSourcesFlattendedTree(viewer, viewerColumns));
+		toolBar.add(new DebugSourcesNormalTree(viewer, viewerColumns));
 	}
 
 	private void registerForEvents() {
