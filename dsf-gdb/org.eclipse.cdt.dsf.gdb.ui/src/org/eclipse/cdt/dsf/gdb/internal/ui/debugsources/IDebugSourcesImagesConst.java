@@ -15,9 +15,9 @@ package org.eclipse.cdt.dsf.gdb.internal.ui.debugsources;
  */
 public interface IDebugSourcesImagesConst {
 
-	public static final String IMG_COLLAPSE_DEBUG_SOURCES = "icons/full/dlcl16/collapse_all.gif"; //$NON-NLS-1$
+	public static final String IMG_COLLAPSE_DEBUG_SOURCES = "icons/full/elcl16/collapse_all.gif"; //$NON-NLS-1$
 
-	public static final String IMG_EXPAND_DEBUG_SOURCES = "icons/full/dlcl16/expand_all.gif"; //$NON-NLS-1$
+	public static final String IMG_EXPAND_DEBUG_SOURCES = "icons/full/elcl16/expand_all.gif"; //$NON-NLS-1$
 
 	public static final String IMG_FLAT_LAYOUT = "icons/full/elcl16/flatLayout.png"; //$NON-NLS-1$
 
