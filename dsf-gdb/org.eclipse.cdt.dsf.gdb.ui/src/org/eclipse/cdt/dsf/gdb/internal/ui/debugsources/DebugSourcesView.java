@@ -420,13 +420,9 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 
 		@Override
 		protected boolean isLeafMatch(Viewer viewer, Object element) {
-			boolean expanded = false;
-			expanded = ((TreeViewer) viewer).getExpandedState(((DebugTree<?>) element).getParent());
-			if (!expanded) {
-				return false;
-			}
 			String name = (String) ((DebugTree<?>) element).getData();
-			return wordMatches(name);
+			String path = (String) ((DebugTree<?>) element).getLeafData();
+			return wordMatches(path) || wordMatches(name);
 		}
 	}
 }
