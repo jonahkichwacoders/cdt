@@ -11,6 +11,7 @@
 package org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.tree;
 
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -128,6 +129,11 @@ public class DebugTree<T extends Comparable<?>> {
 	 */
 	public void setParent(DebugTree<T> parent) {
 		this.parent = parent;
+	}
+
+	@Override
+	public String toString() {
+		return Objects.toString(getData());
 	}
 
 }
