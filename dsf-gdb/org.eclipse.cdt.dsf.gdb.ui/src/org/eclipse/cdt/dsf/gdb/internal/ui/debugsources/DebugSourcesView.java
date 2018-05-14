@@ -205,6 +205,10 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 	}
 
 	private void registerForEvents() {
+		if (viewer == null || viewer.getControl().isDisposed()) {
+			return;
+		}
+
 		// Get the debug selection to know what the user is looking at in the Debug view
 		IAdaptable context = DebugUITools.getDebugContext();
 		if (context == null) {
@@ -242,6 +246,19 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 	public void dispose() {
 		super.dispose();
 		viewer.getControl().dispose();
+		DebugUITools.getDebugContextManager().getContextService(getSite().getWorkbenchWindow())
+				.removeDebugContextListener(this);
+		if (fSession != null) {
+			DsfSession lastSession = fSession;
+			if (!lastSession.getExecutor().isShutdown()) {
+				lastSession.getExecutor().submit(new DsfRunnable() {
+					@Override
+					public void run() {
+						lastSession.removeServiceEventListener(DebugSourcesView.this);
+					}
+				});
+			}
+		}
 	}
 
 	/**
@@ -252,13 +269,26 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 	 */
 	private void registerForEvents(DsfSession session) {
 		if (session != null) {
-			fSession = session;
-			fSession.getExecutor().submit(new DsfRunnable() {
-				@Override
-				public void run() {
-					fSession.addServiceEventListener(DebugSourcesView.this, null);
+			if (fSession != session) {
+				if (fSession != null) {
+					DsfSession lastSession = fSession;
+					if (!lastSession.getExecutor().isShutdown()) {
+						lastSession.getExecutor().submit(new DsfRunnable() {
+							@Override
+							public void run() {
+								lastSession.removeServiceEventListener(DebugSourcesView.this);
+							}
+						});
+					}
 				}
-			});
+				fSession = session;
+				fSession.getExecutor().submit(new DsfRunnable() {
+					@Override
+					public void run() {
+						fSession.addServiceEventListener(DebugSourcesView.this, null);
+					}
+				});
+			}
 		}
 	}
 
@@ -354,27 +384,29 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 	// This method must be public for the DSF callback to be found
 	@DsfServiceEventHandler
 	public void eventReceived(ISuspendedDMEvent event) {
-		// Most DSF event have a DM context
-		IDMContext dmcontext = event.getDMContext();
-		if (dmcontext == null) {
-			return;
-		}
-
-		// Extract DSF session id from the DM context
-		String sessionId = dmcontext.getSessionId();
-		// Get the full DSF session to have access to the DSF executor
-		DsfSession session = DsfSession.getSession(sessionId);
-
-		// For container events (all-stop mode), extract the triggering thread
-		if (event instanceof IContainerSuspendedDMEvent) {
-			IExecutionDMContext[] triggers = ((IContainerSuspendedDMEvent) event).getTriggeringContexts();
-			if (triggers != null && triggers.length > 0) {
-				assert triggers.length == 1;
-				dmcontext = triggers[0];
+		if (viewer != null && !viewer.getTree().isDisposed()) {
+			// Most DSF event have a DM context
+			IDMContext dmcontext = event.getDMContext();
+			if (dmcontext == null) {
+				return;
 			}
-		}
 
-		displaySourceFiles(session, dmcontext);
+			// Extract DSF session id from the DM context
+			String sessionId = dmcontext.getSessionId();
+			// Get the full DSF session to have access to the DSF executor
+			DsfSession session = DsfSession.getSession(sessionId);
+
+			// For container events (all-stop mode), extract the triggering thread
+			if (event instanceof IContainerSuspendedDMEvent) {
+				IExecutionDMContext[] triggers = ((IContainerSuspendedDMEvent) event).getTriggeringContexts();
+				if (triggers != null && triggers.length > 0) {
+					assert triggers.length == 1;
+					dmcontext = triggers[0];
+				}
+			}
+
+			displaySourceFiles(session, dmcontext);
+		}
 	}
 
 	@Override
