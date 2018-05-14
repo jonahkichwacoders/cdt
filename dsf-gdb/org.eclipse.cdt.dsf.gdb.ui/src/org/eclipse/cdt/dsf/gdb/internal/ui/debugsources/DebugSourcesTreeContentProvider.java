@@ -11,18 +11,34 @@
 package org.eclipse.cdt.dsf.gdb.internal.ui.debugsources;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.tree.DebugTree;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 
 public class DebugSourcesTreeContentProvider implements ITreeContentProvider {
-	public static final DebugSourcesTreeContentProvider FLATTENED = new DebugSourcesTreeContentProvider(true);
-	public static final DebugSourcesTreeContentProvider NORMAL = new DebugSourcesTreeContentProvider(false);
-
 	private boolean flattenFoldersWithNoFiles;
+	private boolean showExistingFilesOnly;
 
-	private DebugSourcesTreeContentProvider(boolean flattenFoldersWithNoFiles) {
+	public DebugSourcesTreeContentProvider(boolean flattenFoldersWithNoFiles, boolean showExistingFilesOnly) {
 		this.flattenFoldersWithNoFiles = flattenFoldersWithNoFiles;
+		this.showExistingFilesOnly = showExistingFilesOnly;
+	}
+
+	public void setFlattenFoldersWithNoFiles(boolean flattenFoldersWithNoFiles) {
+		this.flattenFoldersWithNoFiles = flattenFoldersWithNoFiles;
+	}
+
+	public void setShowExistingFilesOnly(boolean showExistingFilesOnly) {
+		this.showExistingFilesOnly = showExistingFilesOnly;
+	}
+
+	public boolean isFlattenFoldersWithNoFiles() {
+		return flattenFoldersWithNoFiles;
+	}
+
+	public boolean isShowExistingFilesOnly() {
+		return showExistingFilesOnly;
 	}
 
 	@Override
@@ -34,6 +50,9 @@ public class DebugSourcesTreeContentProvider implements ITreeContentProvider {
 			@SuppressWarnings("unchecked")
 			DebugTree<Comparable<?>> tree = (DebugTree<Comparable<?>>) inputElement;
 			Set<DebugTree<Comparable<?>>> children = tree.getChildren();
+			if (showExistingFilesOnly) {
+				children = children.stream().filter(c -> c.getExists()).collect(Collectors.toSet());
+			}
 			return children.toArray();
 		}
 		return null;
@@ -48,6 +67,9 @@ public class DebugSourcesTreeContentProvider implements ITreeContentProvider {
 			@SuppressWarnings("unchecked")
 			DebugTree<Comparable<?>> tree = (DebugTree<Comparable<?>>) parentElement;
 			Set<DebugTree<Comparable<?>>> children = tree.getChildren();
+			if (showExistingFilesOnly) {
+				children = children.stream().filter(c -> c.getExists()).collect(Collectors.toSet());
+			}
 			if (flattenFoldersWithNoFiles) {
 				if (children.size() == 1) {
 					DebugTree<Comparable<?>> child = children.iterator().next();

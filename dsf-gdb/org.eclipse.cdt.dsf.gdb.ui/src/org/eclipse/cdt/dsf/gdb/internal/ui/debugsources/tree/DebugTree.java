@@ -26,13 +26,16 @@ public class DebugTree<T extends Comparable<?>> {
 	private final T data;
 	private T leafData;
 	private DebugTree<T> parent;
+	private boolean exists;
 
 	/**
 	 * 
 	 * @param data
+	 * @param exists
 	 */
-	public DebugTree(T data) {
+	public DebugTree(T data, boolean exists) {
 		this.data = data;
+		this.exists = exists;
 	}
 
 	/**
@@ -41,23 +44,28 @@ public class DebugTree<T extends Comparable<?>> {
 	 * @param data
 	 * @param leafData
 	 */
-	private DebugTree(T data, T leafData) {
+	private DebugTree(T data, T leafData, boolean exists) {
 		this.data = data;
 		this.leafData = leafData;
+		this.exists = exists;
 	}
 
 	/**
 	 * 
 	 * @param data of node
+	 * @param exists 
 	 * @return a new node if not already existing, existing node otherwise
 	 */
-	public DebugTree<T> addNode(T data) {
+	public DebugTree<T> addNode(T data, boolean exists) {
 		for (DebugTree<T> child : children) {
 			if (child.data.equals(data)) {
+				if (exists) {
+					child.exists = true;
+				}
 				return child;
 			}
 		}
-		return addChild(new DebugTree<T>(data));
+		return addChild(new DebugTree<T>(data, exists));
 	}
 
 	/**
@@ -66,13 +74,13 @@ public class DebugTree<T extends Comparable<?>> {
 	 * @param leafData of leaf
 	 * @return a new leaf if not already existing, existing leaf otherwise
 	 */
-	public DebugTree<T> addLeaf(T data, T leafData) {
+	public DebugTree<T> addLeaf(T data, T leafData, boolean exists) {
 		for (DebugTree<T> child : children) {
 			if (child.data.equals(data)) {
 				return child;
 			}
 		}
-		return addChild(new DebugTree<T>(data, leafData));
+		return addChild(new DebugTree<T>(data, leafData, exists));
 	}
 
 	private DebugTree<T> addChild(DebugTree<T> child) {
@@ -112,6 +120,15 @@ public class DebugTree<T extends Comparable<?>> {
 	 */
 	public T getLeafData() {
 		return leafData;
+	}
+
+	/**
+	 * Return true for leaf data that really exists on disk.
+	 * 
+	 * This can be used to display differently.
+	 */
+	public boolean getExists() {
+		return exists;
 	}
 
 	/**

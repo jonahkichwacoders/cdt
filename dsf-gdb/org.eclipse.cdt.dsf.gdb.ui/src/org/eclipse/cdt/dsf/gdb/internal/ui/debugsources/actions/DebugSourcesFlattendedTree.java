@@ -37,7 +37,8 @@ public class DebugSourcesFlattendedTree extends Action {
 
 	@Override
 	public void run() {
-		viewer.setContentProvider(DebugSourcesTreeContentProvider.FLATTENED);
+		DebugSourcesTreeContentProvider contentProvider = (DebugSourcesTreeContentProvider)viewer.getContentProvider();
+		contentProvider.setFlattenFoldersWithNoFiles(true);
 		for (int i = 0; i < viewerColumns.length; i++) {
 			viewerColumns[i].setLabelProvider(DebugSourcesLabelProvider.FLATTENED[i]);
 		}

@@ -22,4 +22,6 @@ public interface IDebugSourcesImagesConst {
 	public static final String IMG_FLAT_LAYOUT = "icons/full/elcl16/flatLayout.png"; //$NON-NLS-1$
 
 	public static final String IMG_NORMAL_LAYOUT = "icons/full/elcl16/hierarchicalLayout.png"; //$NON-NLS-1$
+
+	public static final String IMG_SHOW_EXISTING_FILES_ONLY = "icons/full/elcl16/existingFiles.gif"; //$NON-NLS-1$
 }

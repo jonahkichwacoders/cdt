@@ -15,6 +15,9 @@ import java.util.Set;
 
 import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.tree.DebugTree;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.widgets.Display;
 
 public class DebugSourcesLabelProvider extends ColumnLabelProvider {
 	public static final DebugSourcesLabelProvider[] FLATTENED = new DebugSourcesLabelProvider[] {
@@ -80,5 +83,20 @@ public class DebugSourcesLabelProvider extends ColumnLabelProvider {
 			}
 		}
 		return emptyString;
+	}
+
+	@Override
+	public Color getForeground(Object element) {
+		if (index == 1) {
+			if (element instanceof DebugTree) {
+				@SuppressWarnings("unchecked")
+				DebugTree<Comparable<?>> node = (DebugTree<Comparable<?>>) element;
+				if (!node.getExists()) {
+					return Display.getDefault().getSystemColor(SWT.COLOR_GRAY);
+				}
+			}
+		}
+
+		return super.getForeground(element);
 	}
 }

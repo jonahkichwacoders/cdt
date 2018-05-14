@@ -11,6 +11,7 @@
 package org.eclipse.cdt.dsf.gdb.internal.ui.debugsources;
 
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,6 +28,12 @@ import org.eclipse.cdt.dsf.debug.service.IRunControl.IContainerSuspendedDMEvent;
 import org.eclipse.cdt.dsf.debug.service.IRunControl.IExecutionDMContext;
 import org.eclipse.cdt.dsf.debug.service.IRunControl.ISuspendedDMEvent;
 import org.eclipse.cdt.dsf.gdb.internal.ui.GdbUIPlugin;
+import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesCollapseAction;
+import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesExpandAction;
+import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesFlattendedTree;
+import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesNormalTree;
+import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesShowExistingFilesOnly;
+import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.tree.DebugTree;
 import org.eclipse.cdt.dsf.gdb.service.IDebugSourceFiles;
 import org.eclipse.cdt.dsf.gdb.service.IDebugSourceFiles.IDebugSourceFileInfo;
 import org.eclipse.cdt.dsf.service.DsfServiceEventHandler;
@@ -64,11 +71,6 @@ import org.eclipse.ui.dialogs.FilteredTree;
 import org.eclipse.ui.dialogs.PatternFilter;
 import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesCollapseAction;
-import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesExpandAction;
-import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesFlattendedTree;
-import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesNormalTree;
-import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.tree.DebugTree;
 
 public class DebugSourcesView extends ViewPart implements IDebugContextListener {
 
@@ -100,7 +102,7 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 		viewer = tree.getViewer();
 		viewer.getTree().setLinesVisible(true);
 		viewer.getTree().setHeaderVisible(true);
-		viewer.setContentProvider(DebugSourcesTreeContentProvider.FLATTENED);
+		viewer.setContentProvider(new DebugSourcesTreeContentProvider(true, true));
 		viewer.setUseHashlookup(true);
 
 		comparator = new DebugSourcesViewComparator<DebugTree>();
@@ -123,7 +125,9 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 					DebugTree<?> node = (DebugTree<?>) selectedNode;
 					// only leafs can be opened!
 					if (!node.hasChildren()) {
-						openSourceFile((String) node.getLeafData());
+						if (node.getExists()) {
+							openSourceFile((String) node.getLeafData());
+						}
 					}
 				}
 			}
@@ -197,6 +201,7 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 		toolBar.add(new DebugSourcesCollapseAction(viewer));
 		toolBar.add(new DebugSourcesFlattendedTree(viewer, viewerColumns));
 		toolBar.add(new DebugSourcesNormalTree(viewer, viewerColumns));
+		toolBar.add(new DebugSourcesShowExistingFilesOnly(viewer));
 	}
 
 	private void registerForEvents() {
@@ -304,7 +309,7 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 
 	private DebugTree<?> populateTree(IDebugSourceFileInfo[] srcFileInfo) {
 		// populate tree
-		DebugTree<String> debugTree = new DebugTree<String>(""); //$NON-NLS-1$
+		DebugTree<String> debugTree = new DebugTree<String>("", false); //$NON-NLS-1$
 		DebugTree<String> current = debugTree;
 		for (int i = 0; i < srcFileInfo.length; i++) {
 			DebugTree<String> root = current;
@@ -313,24 +318,25 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 			// Use Path API to clean the path
 			try {
 				Path p = Paths.get(path);
+				boolean exists = Files.exists(p);
 				Path filename = p.getFileName();
 				// add root
 				Path pRoot = p.getRoot();
 				if (pRoot == null || !p.isAbsolute()) {
-					current = current.addLeaf(DebugSourcesMessages.DebugSourcesView_unrooted, p.toString());
+					current = current.addLeaf(DebugSourcesMessages.DebugSourcesView_unrooted, p.toString(), exists);
 				} else if (pRoot.equals(filename)) {
-					current = current.addLeaf(srcFileInfo[i].getName(), p.toString());
+					current = current.addLeaf(srcFileInfo[i].getName(), p.toString(), exists);
 				} else {
-					current = current.addNode(pRoot.toString());
+					current = current.addNode(pRoot.toString(), exists);
 				}
 				parent = current;
 				// Add each sub-path
 				Path normalizedPath = p.normalize();
 				for (Path subpath : normalizedPath) {
 					if (subpath.equals(filename)) { // this is a leaf
-						current = current.addLeaf(srcFileInfo[i].getName(), p.toString());
+						current = current.addLeaf(srcFileInfo[i].getName(), p.toString(), exists);
 					} else {
-						current = current.addNode(subpath.toString());
+						current = current.addNode(subpath.toString(), exists);
 					}
 					current.setParent(parent);
 					parent = current;

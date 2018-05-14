@@ -34,6 +34,8 @@ public class DebugSourcesMessages extends NLS {
 	public static String DebugSourcesFlattendedTree_description;
 	public static String DebugSourcesNormalTree_description;
 	public static String DebugSourcesNormalTree_name;
+	public static String DebugSourcesShowExistingFilesOnly_description;
+	public static String DebugSourcesShowExistingFilesOnly_name;
 	public static String DebugSourcesView_unrooted;
 
 	public static String GdbDebugSourcesPreferences_name;
