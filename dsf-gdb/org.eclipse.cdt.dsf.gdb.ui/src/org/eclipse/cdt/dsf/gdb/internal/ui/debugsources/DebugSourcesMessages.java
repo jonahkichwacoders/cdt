@@ -19,7 +19,6 @@ public class DebugSourcesMessages extends NLS {
 
 	public static String DebugSourcesMessages_name_column;
 	public static String DebugSourcesMessages_path_column;
-	public static String DebugSourcesMessages_initializing;
 	public static String DebugSourcesMessages_unknown;
 
 	public static String DebugSourcesMessages_filter_search_tooltip;

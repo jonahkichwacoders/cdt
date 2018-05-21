@@ -111,7 +111,6 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 		viewerColumns = createColumns(viewer);
 
 		viewer.setComparator(comparator);
-		viewer.setInput(DebugSourcesMessages.DebugSourcesMessages_initializing);
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event) {
