@@ -153,4 +153,43 @@ public class DebugTree<T extends Comparable<?>> {
 		return Objects.toString(getData());
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((data == null) ? 0 : data.hashCode());
+		result = prime * result + (exists ? 1231 : 1237);
+		result = prime * result + ((leafData == null) ? 0 : leafData.hashCode());
+		result = prime * result + ((parent == null) ? 0 : parent.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DebugTree other = (DebugTree) obj;
+		if (data == null) {
+			if (other.data != null)
+				return false;
+		} else if (!data.equals(other.data))
+			return false;
+		if (exists != other.exists)
+			return false;
+		if (leafData == null) {
+			if (other.leafData != null)
+				return false;
+		} else if (!leafData.equals(other.leafData))
+			return false;
+		if (parent == null) {
+			if (other.parent != null)
+				return false;
+		} else if (!parent.equals(other.parent))
+			return false;
+		return true;
+	}
 }

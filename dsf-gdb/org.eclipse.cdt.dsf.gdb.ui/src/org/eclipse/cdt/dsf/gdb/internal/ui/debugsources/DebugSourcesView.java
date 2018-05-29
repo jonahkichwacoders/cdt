@@ -354,12 +354,16 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 								IDebugSourceFileInfo[] srcFileInfo = getData();
 								// We have a frame context. It is just a 'pointer' though.
 								// We need to get the data associated with it.
+								DebugTree<?> populateTree = populateTree(srcFileInfo);
 								Display.getDefault().asyncExec(new Runnable() {
 									@Override
 									public void run() {
 										if (!viewer.getControl().isDisposed()) {
-											viewer.setInput(populateTree(srcFileInfo));
-											viewer.expandAll();
+											populateTree.toString();
+											viewer.setInput(populateTree);
+											// TODO: Expanding all when there are 15k files
+											// is noticeably slow.
+											// viewer.expandAll();
 										}
 									}
 								});
