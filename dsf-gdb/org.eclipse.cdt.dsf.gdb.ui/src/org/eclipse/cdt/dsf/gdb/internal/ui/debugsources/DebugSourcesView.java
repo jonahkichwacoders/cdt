@@ -203,7 +203,8 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 		toolBar.add(new DebugSourcesCollapseAction(viewer));
 		toolBar.add(new DebugSourcesFlattendedTree(viewer, viewerColumns));
 		toolBar.add(new DebugSourcesNormalTree(viewer, viewerColumns));
-		toolBar.add(new DebugSourcesShowExistingFilesOnly(viewer));
+// TODO: we aren't testing for file existence at the moment.
+//		toolBar.add(new DebugSourcesShowExistingFilesOnly(viewer));
 	}
 
 	private DsfSession getSession() {
@@ -389,7 +390,8 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 			// Use Path API to clean the path
 			try {
 				Path p = Paths.get(path);
-				boolean exists = Files.exists(p);
+				boolean exists = true; // Files.exists(p); TODO We need to do this asynchronously, if/when we do we can
+										// reenable the button to show/hide files
 				Path filename = p.getFileName();
 				// add root
 				Path pRoot = p.getRoot();
