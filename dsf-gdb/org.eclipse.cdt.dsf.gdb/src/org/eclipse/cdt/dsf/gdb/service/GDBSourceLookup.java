@@ -25,7 +25,7 @@ import org.eclipse.cdt.dsf.concurrent.DataRequestMonitor;
 import org.eclipse.cdt.dsf.concurrent.IDsfStatusConstants;
 import org.eclipse.cdt.dsf.concurrent.ImmediateRequestMonitor;
 import org.eclipse.cdt.dsf.concurrent.RequestMonitor;
-import org.eclipse.cdt.dsf.datamodel.DMContexts;
+import org.eclipse.cdt.dsf.datamodel.AbstractDMEvent;
 import org.eclipse.cdt.dsf.datamodel.IDMContext;
 import org.eclipse.cdt.dsf.debug.service.ICachingService;
 import org.eclipse.cdt.dsf.debug.service.command.CommandCache;
@@ -34,7 +34,6 @@ import org.eclipse.cdt.dsf.gdb.internal.GdbPlugin;
 import org.eclipse.cdt.dsf.gdb.launching.GdbSourceLookupDirector;
 import org.eclipse.cdt.dsf.mi.service.CSourceLookup;
 import org.eclipse.cdt.dsf.mi.service.IMICommandControl;
-import org.eclipse.cdt.dsf.mi.service.IMIContainerDMContext;
 import org.eclipse.cdt.dsf.mi.service.command.CommandFactory;
 import org.eclipse.cdt.dsf.mi.service.command.output.MIInfo;
 import org.eclipse.cdt.dsf.mi.service.command.output.MiSourceFilesInfo;
@@ -49,6 +48,13 @@ import org.eclipse.core.runtime.Status;
  * @since 5.0
  */
 public class GDBSourceLookup extends CSourceLookup implements IGDBSourceLookup, IDebugSourceFiles, ICachingService {
+
+	private static class DebugSourceFilesChangedEvent extends AbstractDMEvent<IDMContext>
+	implements IDebugSourceFilesChangedEvent {
+        public DebugSourceFilesChangedEvent(IDMContext context) {
+        	super(context);
+        }
+	}
 
 	private ICommandControlService fCommand;
 	private CommandFactory fCommandFactory;
@@ -157,6 +163,7 @@ public class GDBSourceLookup extends CSourceLookup implements IGDBSourceLookup, 
 			protected void handleCompleted() {
 				// Reset the list of source files when source path substitutions change
 				fDebugSourceFilesCache.reset();
+				getSession().dispatchEvent(new DebugSourceFilesChangedEvent(sourceLookupCtx), getProperties());
 				if (!isSuccess()) {
 					/*
 					 * We failed to apply the changes. Clear the cache as it does not represent the
@@ -253,15 +260,7 @@ public class GDBSourceLookup extends CSourceLookup implements IGDBSourceLookup, 
 
 	@Override
 	public void getSources(final IDMContext dmc, final DataRequestMonitor<IDebugSourceFileInfo[]> rm) {
-		IMIContainerDMContext containerDmc = DMContexts.getAncestorOfType(dmc, IMIContainerDMContext.class);
-		if (containerDmc == null) {
-			rm.setStatus(new Status(IStatus.ERROR, GdbPlugin.PLUGIN_ID, INVALID_HANDLE, "Container context not found", //$NON-NLS-1$
-					null));
-			rm.done();
-			return;
-		}
-
-		fDebugSourceFilesCache.execute(fCommandFactory.createMiFileListExecSourceFiles(containerDmc),
+		fDebugSourceFilesCache.execute(fCommandFactory.createMiFileListExecSourceFiles(dmc),
 				new DataRequestMonitor<MiSourceFilesInfo>(getExecutor(), rm) {
 					@Override
 					protected void handleSuccess() {
@@ -279,5 +278,6 @@ public class GDBSourceLookup extends CSourceLookup implements IGDBSourceLookup, 
 	@Override
 	public void flushCache(IDMContext context) {
 		fDebugSourceFilesCache.reset();
+		getSession().dispatchEvent(new DebugSourceFilesChangedEvent(fCommand.getContext()), getProperties());
 	}
 }

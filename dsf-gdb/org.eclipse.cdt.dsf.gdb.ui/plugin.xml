@@ -634,4 +634,17 @@
             viewId="org.eclipse.cdt.dsf.gdb.ui.debugsources.view">
       </contextViewBinding>
    </extension>
+    <extension point="org.eclipse.ui.viewActions">
+      <viewContribution
+            id="org.eclipse.cdt.dsf.gdb.ui.debugsources.view.refresh"
+            targetID="org.eclipse.cdt.dsf.gdb.ui.debugsources.view">
+         <action
+               class="org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.DebugSourcesViewRefresh"
+               icon="icons/refresh.gif"
+               id="org.eclipse.cdt.dsf.gdb.ui.debugsources.view.refresh"
+               label="%debugSourcesRefresh.name"
+               toolbarPath="additions">
+         </action>
+      </viewContribution>
+    </extension>
 </plugin>

@@ -12,6 +12,7 @@ package org.eclipse.cdt.dsf.gdb.service;
 
 import org.eclipse.cdt.dsf.concurrent.DataRequestMonitor;
 import org.eclipse.cdt.dsf.datamodel.IDMContext;
+import org.eclipse.cdt.dsf.datamodel.IDMEvent;
 import org.eclipse.cdt.dsf.service.IDsfService;
 
 /**
@@ -44,6 +45,11 @@ public interface IDebugSourceFiles extends IDsfService {
 		 */
 		public String getPath();
 	}
+
+	/**
+	 * Event indicating that the list of the files may have changed for the given context.
+	 */
+    public interface IDebugSourceFilesChangedEvent extends IDMEvent<IDMContext> {}
 
 	/**
 	 * Retrieves the list of sources data/files for the given context.

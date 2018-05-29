@@ -11,10 +11,10 @@
 package org.eclipse.cdt.dsf.gdb.internal.ui.debugsources;
 
 import java.net.URI;
-import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 import org.eclipse.cdt.debug.internal.core.sourcelookup.CSourceNotFoundElement;
 import org.eclipse.cdt.debug.internal.core.sourcelookup.ICSourceNotFoundDescription;
@@ -23,19 +23,20 @@ import org.eclipse.cdt.debug.internal.ui.sourcelookup.CSourceNotFoundEditorInput
 import org.eclipse.cdt.debug.ui.ICDebugUIConstants;
 import org.eclipse.cdt.dsf.concurrent.DataRequestMonitor;
 import org.eclipse.cdt.dsf.concurrent.DsfRunnable;
+import org.eclipse.cdt.dsf.datamodel.DMContexts;
 import org.eclipse.cdt.dsf.datamodel.IDMContext;
-import org.eclipse.cdt.dsf.debug.service.IRunControl.IContainerSuspendedDMEvent;
-import org.eclipse.cdt.dsf.debug.service.IRunControl.IExecutionDMContext;
+import org.eclipse.cdt.dsf.debug.service.ICachingService;
+import org.eclipse.cdt.dsf.debug.service.IRunControl.IContainerDMContext;
 import org.eclipse.cdt.dsf.debug.service.IRunControl.ISuspendedDMEvent;
 import org.eclipse.cdt.dsf.gdb.internal.ui.GdbUIPlugin;
 import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesCollapseAction;
 import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesExpandAction;
 import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesFlattendedTree;
 import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesNormalTree;
-import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.actions.DebugSourcesShowExistingFilesOnly;
 import org.eclipse.cdt.dsf.gdb.internal.ui.debugsources.tree.DebugTree;
 import org.eclipse.cdt.dsf.gdb.service.IDebugSourceFiles;
 import org.eclipse.cdt.dsf.gdb.service.IDebugSourceFiles.IDebugSourceFileInfo;
+import org.eclipse.cdt.dsf.gdb.service.IDebugSourceFiles.IDebugSourceFilesChangedEvent;
 import org.eclipse.cdt.dsf.service.DsfServiceEventHandler;
 import org.eclipse.cdt.dsf.service.DsfServicesTracker;
 import org.eclipse.cdt.dsf.service.DsfSession;
@@ -83,6 +84,8 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 	private DebugSourcesViewComparator<DebugTree> comparator;
 
 	private TreeViewerColumn[] viewerColumns;
+
+	private IContainerDMContext dmcontext;
 
 	public DebugSourcesView() {
 	}
@@ -203,11 +206,46 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 		toolBar.add(new DebugSourcesShowExistingFilesOnly(viewer));
 	}
 
-	private void registerForEvents() {
+	private DsfSession getSession() {
 		if (viewer == null || viewer.getControl().isDisposed()) {
-			return;
+			return null;
 		}
 
+		// Get the debug selection to know what the user is looking at in the Debug view
+		IAdaptable context = DebugUITools.getDebugContext();
+		if (context == null) {
+			return null;
+		}
+
+		// Extract the data model context to use with the DSF services
+		IDMContext dmcontext = context.getAdapter(IDMContext.class);
+		if (dmcontext == null) {
+			// Not dealing with a DSF session
+			return null;
+		}
+
+		// Extract DSF session id from the DM context
+		String sessionId = dmcontext.getSessionId();
+		// Get the full DSF session to have access to the DSF executor
+		DsfSession session = DsfSession.getSession(sessionId);
+		if (session == null) {
+			// It could be that this session is no longer active
+			return null;
+		}
+
+		if (!session.isActive() || session.getExecutor().isShutdown()) {
+			return null;
+		}
+
+		return session;
+	}
+
+	private void registerForEvents() {
+		DsfSession session = getSession();
+		if (session == null) {
+			return;
+		}
+		
 		// Get the debug selection to know what the user is looking at in the Debug view
 		IAdaptable context = DebugUITools.getDebugContext();
 		if (context == null) {
@@ -218,15 +256,6 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 		IDMContext dmcontext = context.getAdapter(IDMContext.class);
 		if (dmcontext == null) {
 			// Not dealing with a DSF session
-			return;
-		}
-
-		// Extract DSF session id from the DM context
-		String sessionId = dmcontext.getSessionId();
-		// Get the full DSF session to have access to the DSF executor
-		DsfSession session = DsfSession.getSession(sessionId);
-		if (session == null) {
-			// It could be that this session is no longer active
 			return;
 		}
 
@@ -292,6 +321,16 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 	}
 
 	private void displaySourceFiles(DsfSession session, IDMContext dmcontext) {
+		if (session.getExecutor().isShutdown()) {
+			// can't do anything
+			return;
+		}
+
+		IContainerDMContext containerDMContext = DMContexts.getAncestorOfType(dmcontext, IContainerDMContext.class);
+		if (Objects.equals(containerDMContext, this.dmcontext)) {
+			return;
+		}
+		this.dmcontext = containerDMContext;
 		session.getExecutor().submit(new DsfRunnable() {
 			@Override
 			public void run() {
@@ -307,7 +346,7 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 				}
 
 				// Get the full DSF session to have access to the DSF executor
-				srcService.getSources(dmcontext,
+				srcService.getSources(containerDMContext,
 						new DataRequestMonitor<IDebugSourceFileInfo[]>(session.getExecutor(), null) {
 							@Override
 							protected void handleSuccess() {
@@ -337,7 +376,6 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 	}
 
 	private DebugTree<?> populateTree(IDebugSourceFileInfo[] srcFileInfo) {
-		// populate tree
 		DebugTree<String> debugTree = new DebugTree<String>("", false); //$NON-NLS-1$
 		DebugTree<String> current = debugTree;
 		for (int i = 0; i < srcFileInfo.length; i++) {
@@ -383,29 +421,40 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 	// This method must be public for the DSF callback to be found
 	@DsfServiceEventHandler
 	public void eventReceived(ISuspendedDMEvent event) {
-		if (viewer != null && !viewer.getTree().isDisposed()) {
-			// Most DSF event have a DM context
-			IDMContext dmcontext = event.getDMContext();
-			if (dmcontext == null) {
-				return;
-			}
+		registerForEvents();
+	}
 
-			// Extract DSF session id from the DM context
-			String sessionId = dmcontext.getSessionId();
-			// Get the full DSF session to have access to the DSF executor
-			DsfSession session = DsfSession.getSession(sessionId);
+	// This method must be public for the DSF callback to be found
+	@DsfServiceEventHandler
+	public void eventReceived(IDebugSourceFilesChangedEvent event) {
+		registerForEvents();
+	}
 
-			// For container events (all-stop mode), extract the triggering thread
-			if (event instanceof IContainerSuspendedDMEvent) {
-				IExecutionDMContext[] triggers = ((IContainerSuspendedDMEvent) event).getTriggeringContexts();
-				if (triggers != null && triggers.length > 0) {
-					assert triggers.length == 1;
-					dmcontext = triggers[0];
+	public boolean canRefresh() {
+		return getSession() != null;
+	}
+	
+	public void refresh() {
+		this.dmcontext = null; // force the refresh
+		DsfSession session = getSession();
+		if (session == null) {
+			return;
+		}
+		session.getExecutor().submit(new DsfRunnable() {
+
+			@Override
+			public void run() {
+				DsfServicesTracker tracker = new DsfServicesTracker(GdbUIPlugin.getBundleContext(), session.getId());
+				IDebugSourceFiles srcService = tracker.getService(IDebugSourceFiles.class);
+				// Don't forgot to dispose of a tracker before it goes out of scope
+				tracker.dispose();
+
+				if (srcService instanceof ICachingService) {
+					ICachingService cache = (ICachingService) srcService;
+					cache.flushCache(dmcontext);
 				}
 			}
-
-			displaySourceFiles(session, dmcontext);
-		}
+		});
 	}
 
 	@Override
@@ -471,4 +520,5 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 			return wordMatches(path) || wordMatches(name);
 		}
 	}
+
 }
