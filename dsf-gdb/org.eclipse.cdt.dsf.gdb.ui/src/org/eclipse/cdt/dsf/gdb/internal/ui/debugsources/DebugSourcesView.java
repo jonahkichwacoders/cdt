@@ -241,12 +241,20 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 		return session;
 	}
 
+	private void asyncExecRegisterForEvents() {
+		if (getSite() == null || getSite().getShell() == null || getSite().getShell().getDisplay() == null
+				|| getSite().getShell().getDisplay().isDisposed()) {
+			return;
+		}
+		getSite().getShell().getDisplay().asyncExec(this::registerForEvents);
+	}
+
 	private void registerForEvents() {
 		DsfSession session = getSession();
 		if (session == null) {
 			return;
 		}
-		
+
 		// Get the debug selection to know what the user is looking at in the Debug view
 		IAdaptable context = DebugUITools.getDebugContext();
 		if (context == null) {
@@ -427,19 +435,19 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 	// This method must be public for the DSF callback to be found
 	@DsfServiceEventHandler
 	public void eventReceived(ISuspendedDMEvent event) {
-		registerForEvents();
+		asyncExecRegisterForEvents();
 	}
 
 	// This method must be public for the DSF callback to be found
 	@DsfServiceEventHandler
 	public void eventReceived(IDebugSourceFilesChangedEvent event) {
-		registerForEvents();
+		asyncExecRegisterForEvents();
 	}
 
 	public boolean canRefresh() {
 		return getSession() != null;
 	}
-	
+
 	public void refresh() {
 		this.dmcontext = null; // force the refresh
 		DsfSession session = getSession();
