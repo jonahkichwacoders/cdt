@@ -336,7 +336,7 @@ public class DebugSourcesView extends ViewPart implements IDebugContextListener 
 		}
 
 		IContainerDMContext containerDMContext = DMContexts.getAncestorOfType(dmcontext, IContainerDMContext.class);
-		if (Objects.equals(containerDMContext, this.dmcontext)) {
+		if (containerDMContext == null || Objects.equals(containerDMContext, this.dmcontext)) {
 			return;
 		}
 		this.dmcontext = containerDMContext;
