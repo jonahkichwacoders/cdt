@@ -16,19 +16,18 @@
  *******************************************************************************/
 package org.eclipse.tm.internal.terminal.textcanvas;
 
-import java.util.Optional;
-
+import org.eclipse.jface.resource.ColorDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.tm.terminal.model.ITerminalTextDataReadOnly;
 import org.eclipse.tm.terminal.model.LineSegment;
-import org.eclipse.tm.terminal.model.Style;
+import org.eclipse.tm.terminal.model.TerminalColor;
+import org.eclipse.tm.terminal.model.TerminalStyle;
 
 /**
  *
@@ -68,7 +67,7 @@ public class TextLineRenderer implements ILinelRenderer {
 			LineSegment[] segments = getTerminalText().getLineSegments(line, colFirst, colLast - colFirst);
 			for (int i = 0; i < segments.length; i++) {
 				LineSegment segment = segments[i];
-				Style style = segment.getStyle();
+				TerminalStyle style = segment.getStyle();
 				setupGC(doubleBufferGC, style);
 				String text = segment.getText();
 				drawText(doubleBufferGC, 0, 0, colFirst, segment.getColumn(), text);
@@ -114,7 +113,9 @@ public class TextLineRenderer implements ILinelRenderer {
 	@Override
 	public Color getDefaultBackgroundColor() {
 		// null == default style
-		return fStyleMap.getBackgroundColor(null);
+		ColorDescriptor backgroundColorDescriptor = fStyleMap.getBackgroundColorDescriptor(null);
+		Color color = backgroundColorDescriptor.createColor(Display.getDefault());
+		return color;
 	}
 
 	private void drawCursor(ITextCanvasModel model, GC gc, int row, int x, int y, int colFirst) {
@@ -125,10 +126,10 @@ public class TextLineRenderer implements ILinelRenderer {
 		if (row == cursorLine) {
 			int cursorColumn = model.getCursorColumn();
 			if (cursorColumn < getTerminalText().getWidth()) {
-				Style style = getTerminalText().getStyle(row, cursorColumn);
+				TerminalStyle style = getTerminalText().getStyle(row, cursorColumn);
 				if (style == null) {
 					// TODO make the cursor color customizable
-					style = Style.getStyle("BLACK", "WHITE"); //$NON-NLS-1$//$NON-NLS-2$
+					style = TerminalStyle.getStyle(TerminalColor.FOREGROUND, TerminalColor.BACKGROUND);
 				}
 				style = style.setReverse(!style.isReverse());
 				setupGC(gc, style);
@@ -159,20 +160,11 @@ public class TextLineRenderer implements ILinelRenderer {
 		}
 	}
 
-	private void setupGC(GC gc, Style style) {
-		Optional<RGB> foregroundRGB = fStyleMap.getForegroundRGB(style);
-		if (foregroundRGB.isPresent()) {
-			gc.setForeground(new Color(gc.getDevice(), foregroundRGB.get()));
-		} else {
-			gc.setForeground(fStyleMap.getForegrondColor(style));
-		}
-
-		Optional<RGB> backgroundRGB = fStyleMap.getBackgroundRGB(style);
-		if (backgroundRGB.isPresent()) {
-			gc.setBackground(new Color(gc.getDevice(), backgroundRGB.get()));
-		} else {
-			gc.setBackground(fStyleMap.getBackgroundColor(style));
-		}
+	private void setupGC(GC gc, TerminalStyle style) {
+		ColorDescriptor foregrondColor = fStyleMap.getForegrondColorDescriptor(style);
+		gc.setForeground(foregrondColor.createColor(gc.getDevice()));
+		ColorDescriptor backgroundColorDescriptor = fStyleMap.getBackgroundColorDescriptor(style);
+		gc.setBackground(backgroundColorDescriptor.createColor(gc.getDevice()));
 
 		Font f = fStyleMap.getFont(style);
 		if (f != gc.getFont()) {
