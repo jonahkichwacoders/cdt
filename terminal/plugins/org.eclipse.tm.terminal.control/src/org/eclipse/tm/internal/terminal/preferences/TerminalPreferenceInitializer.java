@@ -18,7 +18,9 @@ package org.eclipse.tm.internal.terminal.preferences;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.jface.resource.StringConverter;
 import org.eclipse.tm.internal.terminal.control.impl.TerminalPlugin;
+import org.eclipse.tm.terminal.model.TerminalColor;
 
 /**
  * Terminal Preference Initializer.
@@ -39,5 +41,9 @@ public class TerminalPreferenceInitializer extends AbstractPreferenceInitializer
 		defaultPrefs.putBoolean(ITerminalConstants.PREF_INVERT_COLORS, ITerminalConstants.DEFAULT_INVERT_COLORS);
 		defaultPrefs.putInt(ITerminalConstants.PREF_BUFFERLINES, ITerminalConstants.DEFAULT_BUFFERLINES);
 		defaultPrefs.put(ITerminalConstants.PREF_FONT_DEFINITION, ITerminalConstants.DEFAULT_FONT_DEFINITION);
+		TerminalColor[] colors = TerminalColor.values();
+		for (TerminalColor color : colors) {
+			defaultPrefs.put(color.getPreferenceName(), StringConverter.asString(color.getDefaultRGBColor().get()));
+		}
 	}
 }
