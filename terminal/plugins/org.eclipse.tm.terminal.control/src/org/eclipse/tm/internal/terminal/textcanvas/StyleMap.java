@@ -290,6 +290,10 @@ public class StyleMap {
 		return fCharSize.y;
 	}
 
+	/**
+	 * @deprecated Use {@link #updateFont(String)}
+	 */
+	@Deprecated
 	public void updateFont() {
 		updateFont(ITerminalConstants.FONT_DEFINITION);
 	}
