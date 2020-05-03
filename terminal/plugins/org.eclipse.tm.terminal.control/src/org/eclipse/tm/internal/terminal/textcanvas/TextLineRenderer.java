@@ -18,6 +18,7 @@ package org.eclipse.tm.internal.terminal.textcanvas;
 
 import java.util.Optional;
 
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
@@ -35,10 +36,12 @@ import org.eclipse.tm.terminal.model.Style;
  */
 public class TextLineRenderer implements ILinelRenderer {
 	private final ITextCanvasModel fModel;
-	StyleMap fStyleMap = new StyleMap();
+	private final StyleMap fStyleMap;
 
-	public TextLineRenderer(TextCanvas c, ITextCanvasModel model) {
+	public TextLineRenderer(TextCanvas c, ITextCanvasModel model, IPreferenceStore fPreferenceStore) {
 		fModel = model;
+		fStyleMap = new StyleMap(fPreferenceStore);
+		fStyleMap.init();
 	}
 
 	@Override

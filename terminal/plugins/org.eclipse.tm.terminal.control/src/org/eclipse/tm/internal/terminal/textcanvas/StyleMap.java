@@ -35,6 +35,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.eclipse.core.runtime.Assert;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
@@ -50,7 +52,7 @@ import org.eclipse.tm.terminal.model.StyleColor;
 public class StyleMap {
 
 	private static final String PREFIX = "org.eclipse.tm.internal."; //$NON-NLS-1$
-	String fFontName = ITerminalConstants.FONT_DEFINITION;
+	String fFontName = null;
 	Map<StyleColor, Color> fColorMapForeground = new HashMap<>();
 	Map<StyleColor, Color> fColorMapBackground = new HashMap<>();
 	Map<StyleColor, Color> fColorMapIntense = new HashMap<>();
@@ -59,11 +61,33 @@ public class StyleMap {
 	private boolean fInvertColors;
 	private boolean fProportional;
 	private final int[] fOffsets = new int[256];
+	private IPreferenceStore fPreferenceStore;
 
-	StyleMap() {
+	/**
+	 * Call {@link #init()} after construction.
+	 */
+	public StyleMap(IPreferenceStore preferenceStore) {
+		fPreferenceStore = preferenceStore;
 		initColors();
 		fDefaultStyle = Style.getStyle(StyleColor.getStyleColor(BLACK), StyleColor.getStyleColor(WHITE));
 		updateFont();
+	}
+
+	private String getFontDefinition() {
+		String definition;
+		if (fPreferenceStore != null) {
+			definition = fPreferenceStore.getString(ITerminalConstants.PREF_FONT_DEFINITION);
+		} else {
+			definition = ITerminalConstants.DEFAULT_FONT_DEFINITION;
+		}
+		if (definition == null || definition.isEmpty()) {
+			definition = "org.eclipse.jface.textfont"; //$NON-NLS-1$
+		}
+		return definition;
+	}
+
+	public void init() {
+		updateFont(getFontDefinition());
 	}
 
 	private void initColors() {
@@ -241,6 +265,7 @@ public class StyleMap {
 	//	}
 
 	public Font getFont(Style style) {
+		Assert.isLegal(fFontName != null, "init must be called before using getFont"); //$NON-NLS-1$
 		style = defaultIfNull(style);
 		if (style.isBold()) {
 			return JFaceResources.getFontRegistry().getBold(fFontName);
@@ -252,8 +277,8 @@ public class StyleMap {
 	}
 
 	public Font getFont() {
+		Assert.isLegal(fFontName != null, "init must be called before using getFont"); //$NON-NLS-1$
 		return JFaceResources.getFontRegistry().get(fFontName);
-
 	}
 
 	public int getFontWidth() {
