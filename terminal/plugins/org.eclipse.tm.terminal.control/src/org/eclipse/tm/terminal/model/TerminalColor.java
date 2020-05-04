@@ -16,7 +16,6 @@ import org.eclipse.jface.resource.ColorDescriptor;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.tm.internal.terminal.model.SystemDefaultColors;
 
 /**
  * Colors that can be used in the Terminal are represented by this class. The enum contains
@@ -35,28 +34,28 @@ import org.eclipse.tm.internal.terminal.model.SystemDefaultColors;
  * @since 5.0
  */
 public enum TerminalColor {
-	BLACK(new RGB(0, 0, 0)), //
-	RED(new RGB(205, 0, 0)), //
-	GREEN(new RGB(0, 205, 0)), //
-	YELLOW(new RGB(205, 205, 0)), //
-	BLUE(new RGB(0, 0, 238)), //
-	MAGENTA(new RGB(205, 0, 205)), //
-	CYAN(new RGB(0, 205, 205)), //
-	WHITE(new RGB(229, 229, 229)), //
+	BLACK, //
+	RED, //
+	GREEN, //
+	YELLOW, //
+	BLUE, //
+	MAGENTA, //
+	CYAN, //
+	WHITE, //
 
-	BRIGHT_BLACK(new RGB(0, 0, 0)), //
-	BRIGHT_RED(new RGB(255, 0, 0)), //
-	BRIGHT_GREEN(new RGB(0, 255, 0)), //
-	BRIGHT_YELLOW(new RGB(255, 255, 0)), //
-	BRIGHT_BLUE(new RGB(92, 92, 255)), //
-	BRIGHT_MAGENTA(new RGB(255, 0, 255)), //
-	BRIGHT_CYAN(new RGB(0, 255, 255)), //
-	BRIGHT_WHITE(new RGB(255, 255, 255)), //
+	BRIGHT_BLACK, //
+	BRIGHT_RED, //
+	BRIGHT_GREEN, //
+	BRIGHT_YELLOW, //
+	BRIGHT_BLUE, //
+	BRIGHT_MAGENTA, //
+	BRIGHT_CYAN, //
+	BRIGHT_WHITE, //
 
-	FOREGROUND(SystemDefaultColors.FOREGROUND), //
-	BACKGROUND(SystemDefaultColors.BACKGROUND), //
-	SELECTION_FOREGROUND(SystemDefaultColors.SELECTION_FOREGROUND), //
-	SELECTION_BACKGROUND(SystemDefaultColors.SELECTION_BACKGROUND);
+	FOREGROUND, //
+	BACKGROUND, //
+	SELECTION_FOREGROUND, //
+	SELECTION_BACKGROUND;
 
 	/**
 	 * The first 16-items in the 8-bit lookup table map to the user changeable colors
@@ -149,14 +148,6 @@ public enum TerminalColor {
 		b.invertColor = a;
 	}
 
-	TerminalColor(RGB defaultColor) {
-		this.rgbSupplier = () -> defaultColor;
-	}
-
-	TerminalColor(SystemDefaultColors defaultColor) {
-		this.rgbSupplier = defaultColor::getColor;
-	}
-
 	/**
 	 * Return a new color for the given color with inversions or brightness attributes applied.
 	 *
@@ -177,13 +168,6 @@ public enum TerminalColor {
 			selected = selected.brightColor;
 		}
 		return selected;
-	}
-
-	/**
-	 * Return a supplier for the default RGB value for this color.
-	 */
-	public Supplier<RGB> getDefaultRGBColor() {
-		return rgbSupplier;
 	}
 
 	/**

@@ -29,6 +29,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.tm.internal.terminal.preferences.ITerminalConstants;
+import org.eclipse.tm.internal.terminal.preferences.TerminalColorPresets;
 import org.eclipse.tm.terminal.model.TerminalColor;
 import org.eclipse.tm.terminal.model.TerminalStyle;
 
@@ -68,6 +69,15 @@ public class StyleMap {
 		return definition;
 	}
 
+	private RGB getRGB(TerminalColor color) {
+		if (fPreferenceStore == null) {
+			return TerminalColorPresets.INSTANCE.getDefaultPreset().getRGB(color);
+		}
+		// TODO - this constant to from conversion + going back to preferences to get value is :-(
+		return StringConverter.asRGB(fPreferenceStore.getString(color.toString()));
+
+	}
+
 	public void init() {
 		updateFont(getFontDefinition());
 	}
@@ -96,9 +106,7 @@ public class StyleMap {
 		}
 
 		color = color.convertColor(fInvertColors, style.isBold());
-		// TODO - this constant to from conversion + going back to preferences to get value is :-(
-		return StringConverter.asRGB(
-				fPreferenceStore.get(color.toString(), StringConverter.asString(color.getDefaultRGBColor().get())));
+		return getRGB(color);
 	}
 
 	public RGB getBackgroundRGB(TerminalStyle style) {
@@ -125,9 +133,7 @@ public class StyleMap {
 		}
 
 		color = color.convertColor(fInvertColors, style.isBold());
-		// TODO - this constant to from conversion + going back to preferences to get value is :-(
-		return StringConverter.asRGB(
-				fPreferenceStore.get(color.toString(), StringConverter.asString(color.getDefaultRGBColor().get())));
+		return getRGB(color);
 	}
 
 	private TerminalStyle defaultIfNull(TerminalStyle style) {

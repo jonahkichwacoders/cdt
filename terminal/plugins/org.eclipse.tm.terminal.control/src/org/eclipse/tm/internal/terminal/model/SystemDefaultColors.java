@@ -9,6 +9,9 @@
  *******************************************************************************/
 package org.eclipse.tm.internal.terminal.model;
 
+import java.util.function.Supplier;
+
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
@@ -23,7 +26,7 @@ import org.eclipse.ui.themes.ColorUtil;
  * This class has an implied and optional dependency on org.eclipse.ui.editors bundle by reading
  * that bundles preferences.
  */
-public enum SystemDefaultColors {
+public enum SystemDefaultColors implements Supplier<RGB> {
 
 	/**
 	 * Standard text foreground. Typically black in Light theme.
@@ -76,20 +79,23 @@ public enum SystemDefaultColors {
 	/**
 	 * Get the color for this enum value.
 	 *
-	 * @return the RGB color.
+	 * @return the RGB color or a non-<code>null</code> color as a fallback.
 	 */
-	public RGB getColor() {
+	@Override
+	public RGB get() {
 		IPreferenceStore store = new ScopedPreferenceStore(InstanceScope.INSTANCE, EDITOR_SCOPE);
 
 		RGB rgb = null;
 		String pref = PREF_PREFIX + editorColor;
 		String prefSystemDefault = pref + PREF_SYSTEM_DEFAULT_SUFFIX;
-		if (!store.getBoolean(prefSystemDefault)) {
-			if (store.contains(pref)) {
-				if (store.isDefault(pref))
-					rgb = PreferenceConverter.getDefaultColor(store, pref);
-				else {
-					rgb = PreferenceConverter.getColor(store, pref);
+		if (Platform.getPreferencesService() != null) {
+			if (!store.getBoolean(prefSystemDefault)) {
+				if (store.contains(pref)) {
+					if (store.isDefault(pref))
+						rgb = PreferenceConverter.getDefaultColor(store, pref);
+					else {
+						rgb = PreferenceConverter.getColor(store, pref);
+					}
 				}
 			}
 		}

@@ -25,7 +25,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
- * This is a UI test because {@link TerminalColor#getColorDescriptor(boolean, boolean)
+ * This is a UI test because {@link TerminalColor#convertColor(boolean, boolean)
  * requires a Display to operate the ColorRegistry.
  */
 public class TerminalColorUITest {
@@ -50,64 +50,64 @@ public class TerminalColorUITest {
 	@Test
 	public void testInversionsStandard() {
 
-		assertEquals(BLACK.getColorDescriptor(false, false), WHITE.getColorDescriptor(true, false));
-		assertNotEquals(BLACK.getColorDescriptor(false, false), WHITE.getColorDescriptor(false, false));
+		assertEquals(BLACK.convertColor(false, false), WHITE.convertColor(true, false));
+		assertNotEquals(BLACK.convertColor(false, false), WHITE.convertColor(false, false));
 
-		assertEquals(RED.getColorDescriptor(false, false), RED.getColorDescriptor(true, false));
-		assertEquals(GREEN.getColorDescriptor(false, false), GREEN.getColorDescriptor(true, false));
-		assertEquals(YELLOW.getColorDescriptor(false, false), YELLOW.getColorDescriptor(true, false));
-		assertEquals(BLUE.getColorDescriptor(false, false), BLUE.getColorDescriptor(true, false));
-		assertEquals(MAGENTA.getColorDescriptor(false, false), MAGENTA.getColorDescriptor(true, false));
-		assertEquals(CYAN.getColorDescriptor(false, false), CYAN.getColorDescriptor(true, false));
+		assertEquals(RED.convertColor(false, false), RED.convertColor(true, false));
+		assertEquals(GREEN.convertColor(false, false), GREEN.convertColor(true, false));
+		assertEquals(YELLOW.convertColor(false, false), YELLOW.convertColor(true, false));
+		assertEquals(BLUE.convertColor(false, false), BLUE.convertColor(true, false));
+		assertEquals(MAGENTA.convertColor(false, false), MAGENTA.convertColor(true, false));
+		assertEquals(CYAN.convertColor(false, false), CYAN.convertColor(true, false));
 
-		assertEquals(WHITE.getColorDescriptor(false, false), BLACK.getColorDescriptor(true, false));
-		assertNotEquals(WHITE.getColorDescriptor(false, false), BLACK.getColorDescriptor(false, false));
+		assertEquals(WHITE.convertColor(false, false), BLACK.convertColor(true, false));
+		assertNotEquals(WHITE.convertColor(false, false), BLACK.convertColor(false, false));
 
 	}
 
 	@Test
 	public void testInversionsBright() {
-		assertEquals(BLACK.getColorDescriptor(false, true), WHITE.getColorDescriptor(true, true));
-		assertNotEquals(BLACK.getColorDescriptor(false, true), WHITE.getColorDescriptor(false, true));
+		assertEquals(BLACK.convertColor(false, true), WHITE.convertColor(true, true));
+		assertNotEquals(BLACK.convertColor(false, true), WHITE.convertColor(false, true));
 
-		assertEquals(RED.getColorDescriptor(false, true), RED.getColorDescriptor(true, true));
-		assertEquals(GREEN.getColorDescriptor(false, true), GREEN.getColorDescriptor(true, true));
-		assertEquals(YELLOW.getColorDescriptor(false, true), YELLOW.getColorDescriptor(true, true));
-		assertEquals(BLUE.getColorDescriptor(false, true), BLUE.getColorDescriptor(true, true));
-		assertEquals(MAGENTA.getColorDescriptor(false, true), MAGENTA.getColorDescriptor(true, true));
-		assertEquals(CYAN.getColorDescriptor(false, true), CYAN.getColorDescriptor(true, true));
+		assertEquals(RED.convertColor(false, true), RED.convertColor(true, true));
+		assertEquals(GREEN.convertColor(false, true), GREEN.convertColor(true, true));
+		assertEquals(YELLOW.convertColor(false, true), YELLOW.convertColor(true, true));
+		assertEquals(BLUE.convertColor(false, true), BLUE.convertColor(true, true));
+		assertEquals(MAGENTA.convertColor(false, true), MAGENTA.convertColor(true, true));
+		assertEquals(CYAN.convertColor(false, true), CYAN.convertColor(true, true));
 
-		assertEquals(WHITE.getColorDescriptor(false, true), BLACK.getColorDescriptor(true, true));
-		assertNotEquals(WHITE.getColorDescriptor(false, true), BLACK.getColorDescriptor(false, true));
+		assertEquals(WHITE.convertColor(false, true), BLACK.convertColor(true, true));
+		assertNotEquals(WHITE.convertColor(false, true), BLACK.convertColor(false, true));
 	}
 
 	@Test
 	public void testIndexesResolveToStandardColors() {
 		// check explicit colors
-		assertEquals(TerminalColor.BLACK.getColorDescriptor(false, false),
-				TerminalColor.getIndexedTerminalColor(0).getColorDescriptor(false, false));
-		assertEquals(TerminalColor.RED.getColorDescriptor(false, false),
-				TerminalColor.getIndexedTerminalColor(1).getColorDescriptor(false, false));
+		assertEquals(TerminalColor.BLACK.convertColor(false, false),
+				TerminalColor.getIndexedTerminalColor(0).convertColor(false, false));
+		assertEquals(TerminalColor.RED.convertColor(false, false),
+				TerminalColor.getIndexedTerminalColor(1).convertColor(false, false));
 
 		// Now check all colors
 		for (int i = 0; i < 8; i++) {
-			assertEquals(TerminalColor.values()[i].getColorDescriptor(false, false),
-					TerminalColor.getIndexedTerminalColor(i).getColorDescriptor(false, false));
+			assertEquals(TerminalColor.values()[i].convertColor(false, false),
+					TerminalColor.getIndexedTerminalColor(i).convertColor(false, false));
 		}
 	}
 
 	@Test
 	public void testIndexesResolveToBrightColors() {
 		// check explicit colors
-		assertEquals(TerminalColor.BLACK.getColorDescriptor(false, true),
-				TerminalColor.getIndexedTerminalColor(8).getColorDescriptor(false, false));
-		assertEquals(TerminalColor.RED.getColorDescriptor(false, true),
-				TerminalColor.getIndexedTerminalColor(9).getColorDescriptor(false, false));
+		assertEquals(TerminalColor.BLACK.convertColor(false, true),
+				TerminalColor.getIndexedTerminalColor(8).convertColor(false, false));
+		assertEquals(TerminalColor.RED.convertColor(false, true),
+				TerminalColor.getIndexedTerminalColor(9).convertColor(false, false));
 
 		// Now check all colors
 		for (int i = 0; i < 8; i++) {
-			assertEquals(TerminalColor.values()[i].getColorDescriptor(false, true),
-					TerminalColor.getIndexedTerminalColor(i + 8).getColorDescriptor(false, false));
+			assertEquals(TerminalColor.values()[i].convertColor(false, true),
+					TerminalColor.getIndexedTerminalColor(i + 8).convertColor(false, false));
 		}
 	}
 

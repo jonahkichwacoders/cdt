@@ -15,6 +15,8 @@
  * Martin Oberhuber (Wind River) - [265352][api] Allow setting fonts programmatically
  *******************************************************************************/
 package org.eclipse.tm.internal.terminal.textcanvas;
+
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Device;
