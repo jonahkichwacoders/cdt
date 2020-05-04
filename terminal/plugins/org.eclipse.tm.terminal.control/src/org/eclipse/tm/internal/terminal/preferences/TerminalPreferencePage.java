@@ -20,11 +20,13 @@
 package org.eclipse.tm.internal.terminal.preferences;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
+import org.eclipse.jface.preference.ColorFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.tm.internal.terminal.control.impl.TerminalMessages;
 import org.eclipse.tm.internal.terminal.control.impl.TerminalPlugin;
+import org.eclipse.tm.terminal.model.TerminalColor;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
@@ -73,8 +75,11 @@ public class TerminalPreferencePage extends FieldEditorPreferencePage implements
 				getFieldEditorParent());
 		fEditorBufferSize = new IntegerFieldEditor(ITerminalConstants.PREF_BUFFERLINES, TerminalMessages.BUFFERLINES,
 				getFieldEditorParent());
-
 		fEditorBufferSize.setValidRange(0, Integer.MAX_VALUE);
+
+		for (TerminalColor color : TerminalColor.values()) {
+			new ColorFieldEditor(color.getPreferenceName(), color.toString(), getFieldEditorParent());
+		}
 
 		addField(fInvertColors);
 		addField(fEditorBufferSize);

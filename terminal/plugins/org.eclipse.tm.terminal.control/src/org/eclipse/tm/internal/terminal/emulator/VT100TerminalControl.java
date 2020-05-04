@@ -219,6 +219,8 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 	 */
 	public VT100TerminalControl(ITerminalListener target, Composite wndParent, ITerminalConnector[] connectors,
 			IEclipsePreferences preferenceStore) {
+		//		IPreferenceStore store = TerminalPlugin.getDefault().getPreferenceStore();
+		//		boolean boolean1 = store.getBoolean(ITerminalConstants.PREF_INVERT_COLORS);
 		fConnectors = connectors;
 		fPreferenceStore = preferenceStore;
 		fTerminalListener = target;
