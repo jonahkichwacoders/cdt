@@ -275,13 +275,4 @@
 
 
    </extension>
-
-<!-- Theme contributions -->
-   <extension point="org.eclipse.e4.ui.css.swt.theme">
-      <stylesheet
-            uri="css/org.eclipse.tm.terminal.stylesheet.dark.css">
-            <themeid refid="org.eclipse.e4.ui.css.theme.e4_dark"/>
-      </stylesheet>
-   </extension>
-
 </plugin>
