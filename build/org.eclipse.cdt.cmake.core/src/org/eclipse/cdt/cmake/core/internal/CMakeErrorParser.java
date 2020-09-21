@@ -38,16 +38,13 @@ import org.eclipse.core.runtime.Status;
  */
 /* package */ class CMakeErrorParser implements AutoCloseable {
 
-	private static final String START_LOG = "CMake Debug Log"; //$NON-NLS-1$
-	private static final String START_STATUS = "-- "; //$NON-NLS-1$
-
 	/** matches the Start of a message, also ending the previous message */
 	private static final Pattern PTN_MSG_START;
 
 	private static Map<String, MessageHandler> handlersByMessageStart = new HashMap<>();
 
-	/** the handler for the message we are currently gathering output for or <code>null</code> */
-	private MessageHandler currentHandler;
+	/** the handler for the message we are currently gathering output for */
+	private MessageHandler currentHandler = new MhNull();
 	private final ICMakeExecutionMarkerFactory markerFactory;
 	private final StringBuilder buffer;
 
@@ -55,12 +52,9 @@ import org.eclipse.core.runtime.Status;
 		// setup regex to match the start of a message...
 		StringBuilder ptnbuf = new StringBuilder("^"); //$NON-NLS-1$
 
-		String ignoredMessages = String.join("|", START_LOG, START_STATUS); //$NON-NLS-1$
-		ptnbuf.append(ignoredMessages);
-
-		List<MessageHandler> markerHandlers = Arrays.asList(new MhDeprError(), new MhDeprWarning(), new MhErrorDev(),
-				new MhError(), new MhInternalError(), new MhWarningDev(), new MhWarning());
-		ptnbuf.append('|');
+		List<MessageHandler> markerHandlers = Arrays.asList(new MhStartLog(), new MhStatus(), new MhDeprError(),
+				new MhDeprWarning(), new MhErrorDev(), new MhError(), new MhInternalError(), new MhWarningDev(),
+				new MhWarning());
 		for (Iterator<MessageHandler> it = markerHandlers.iterator(); it.hasNext();) {
 			MessageHandler h = it.next();
 			handlersByMessageStart.put(h.getMessageStart(), h);
@@ -90,7 +84,7 @@ import org.eclipse.core.runtime.Status;
 	 */
 	public void addInput(CharSequence input) {
 		buffer.append(input);
-		processBuffer(false);
+		processBuffer();
 	}
 
 	/** Closes this parser. Any remaining buffered input will be parsed.
@@ -98,51 +92,25 @@ import org.eclipse.core.runtime.Status;
 	@Override
 	public void close() {
 		// process remaining bytes
-		processBuffer(true);
+		processMessage(currentHandler, buffer.toString().trim());
 		buffer.delete(0, buffer.length());
 	}
 
-	private void processBuffer(boolean isEOF) {
+	private void processBuffer() {
 		Matcher matcher = PTN_MSG_START.matcher(""); //$NON-NLS-1$
 		while (true) {
-			matcher.reset(currentHandler == null ? buffer
-					: buffer.subSequence(currentHandler.getMessageStart().length(), buffer.length()));
-			//			System.err.println("-###\nr" + buffer.toString() + "\n###-");
+			matcher.reset(buffer.subSequence(currentHandler.getMessageStart().length(), buffer.length()));
 			if (matcher.find()) {
-				// first or second message arrived in buffer
 				String handlerId = matcher.group();
 				MessageHandler newHandler = handlersByMessageStart.get(handlerId);
-				if (currentHandler == null) {
-					// first message arrived in buffer
-					if (newHandler != null) {
-						// got handler for first message:
-						// discard leading junk
-						buffer.delete(0, matcher.start());
-						currentHandler = newHandler;
-					} else {
-						// no handler for first message:
-						// message is to be ignored, remove msg start to advance
-						buffer.delete(0, matcher.end());
-					}
-					continue; // proceed with follow-up messages
-					//					return; // wait for more input
-				} else {
-					// second message arrived in buffer
-					// extract first message from buffer and process it...
-					int end = matcher.start() + currentHandler.getMessageStart().length();
-					String message = buffer.substring(0, end);
-					processMessage(currentHandler, message.trim());
-					currentHandler = newHandler;
-					buffer.delete(0, end); // delete processed message
-					continue; // proceed with follow-up messages
-				}
+				int end = matcher.start() + currentHandler.getMessageStart().length();
+				String message = buffer.substring(0, end);
+				processMessage(currentHandler, message.trim());
+				currentHandler = newHandler;
+				buffer.delete(0, end); // delete processed message
+				continue; // proceed with follow-up messages
 			} else {
 				// NO message arrived in buffer
-				if (currentHandler != null && isEOF) {
-					// first message is in buffer:
-					// take buffer content as first message and process it...
-					processMessage(currentHandler, buffer.toString().trim());
-				}
 				return; // wait for more input
 			}
 		}
@@ -267,6 +235,70 @@ import org.eclipse.core.runtime.Status;
 			markerFactory.createMarker(fullMessage, getSeverity(), filename, attributes);
 		}
 	} // MessageHandler
+
+	////////////////////////////////////////////////////////////////////
+	private static class MhNull extends MessageHandler {
+
+		@Override
+		public void processMessage(ICMakeExecutionMarkerFactory markerFactory, String fullMessage)
+				throws CoreException {
+		}
+
+		@Override
+		String getMessageStart() {
+			return ""; //$NON-NLS-1$
+		}
+
+		@Override
+		int getSeverity() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public String toString() {
+			return super.toString() + ": " + getMessageStart(); //$NON-NLS-1$
+		}
+	}
+
+	////////////////////////////////////////////////////////////////////
+	private static class MhStartLog extends MhNull {
+		private static final String START_LOG = "CMake Debug Log"; //$NON-NLS-1$
+
+		@Override
+		String getMessageStart() {
+			return START_LOG;
+		}
+
+		@Override
+		int getSeverity() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public String toString() {
+			return super.toString() + ": " + getMessageStart(); //$NON-NLS-1$
+		}
+	}
+
+	////////////////////////////////////////////////////////////////////
+	private static class MhStatus extends MhNull {
+		private static final String START_STATUS = "-- "; //$NON-NLS-1$
+
+		@Override
+		String getMessageStart() {
+			return START_STATUS;
+		}
+
+		@Override
+		int getSeverity() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public String toString() {
+			return super.toString() + ": " + getMessageStart(); //$NON-NLS-1$
+		}
+	}
 
 	////////////////////////////////////////////////////////////////////
 	private static class MhDeprError extends MessageHandler {
